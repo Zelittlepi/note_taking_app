@@ -11,38 +11,25 @@ from src.routes.user import user_bp
 from src.routes.note import note_bp
 from src.models.note import Note
 
+
+# Flask app setup
 app = Flask(__name__, static_folder=os.path.join(os.path.dirname(__file__), 'static'))
 app.config['SECRET_KEY'] = 'asdf#FGSgvasgf$5$WGT'
-
-# Enable CORS for all routes
 CORS(app)
-
-# Load .env if present (makes local testing easier)
 load_dotenv()
 
+# Register blueprints
 app.register_blueprint(user_bp, url_prefix='/api')
 app.register_blueprint(note_bp, url_prefix='/api')
 
-# Database configuration (MySQL only)
-# Priority: DATABASE_URL or MYSQL_URL (full SQLAlchemy URL like mysql+pymysql://user:pass@host:port/db)
-# Fallback: construct from DB_USER/DB_PASSWORD/DB_HOST/DB_PORT/DB_NAME
-db_url = os.getenv('DATABASE_URL') or os.getenv('MYSQL_URL')
+# Supabase/Postgres only: configure SQLAlchemy
+db_url = os.getenv('DATABASE_URL')
 if not db_url:
-    db_user = os.getenv('DB_USER')
-    db_pass = os.getenv('DB_PASSWORD')
-    db_host = os.getenv('DB_HOST')
-    db_port = os.getenv('DB_PORT')
-    db_name = os.getenv('DB_NAME')
-    if db_user and db_pass and db_host and db_name:
-        port_part = f":{db_port}" if db_port else ""
-        # Use PyMySQL driver
-        db_url = f"mysql+pymysql://{db_user}:{db_pass}@{db_host}{port_part}/{db_name}?charset=utf8mb4"
-    else:
-        # Fail fast: require MySQL configuration explicitly
-        raise RuntimeError(
-            "MySQL configuration not found. Set DATABASE_URL or DB_USER/DB_PASSWORD/DB_HOST/DB_NAME environment variables."
-        )
-
+    raise RuntimeError("DATABASE_URL not set. Please provide your Supabase Postgres connection string in .env.")
+if db_url.startswith('postgres://'):
+    db_url = db_url.replace('postgres://', 'postgresql://', 1)
+if 'sslmode=' not in db_url:
+    db_url += ('&' if '?' in db_url else '?') + 'sslmode=require'
 app.config['SQLALCHEMY_DATABASE_URI'] = db_url
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db.init_app(app)
@@ -65,6 +52,7 @@ def serve(path):
             return send_from_directory(static_folder_path, 'index.html')
         else:
             return "index.html not found", 404
+
 
 
 if __name__ == '__main__':
