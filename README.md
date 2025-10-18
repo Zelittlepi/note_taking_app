@@ -30,7 +30,7 @@ The application is deployed and accessible at: **https://3dhkilc88dkk.manus.spac
 - **Flask-CORS**: Cross-origin resource sharing support
 
 ### Database
-- **SQLite**: Lightweight, file-based database for data persistence
+- **MySQL**: Application now uses a MySQL database for data persistence (configured via environment variables)
 
 ## 📁 Project Structure
 
@@ -46,8 +46,7 @@ notetaking-app/
 │   ├── static/
 │   │   ├── index.html       # Frontend application
 │   │   └── favicon.ico      # Application icon
-│   ├── database/
-│   │   └── app.db           # SQLite database file
+│   ├── database/            # (no local SQLite file; database is MySQL)
 │   └── main.py              # Flask application entry point
 ├── venv/                    # Python virtual environment
 ├── requirements.txt         # Python dependencies
@@ -77,8 +76,9 @@ notetaking-app/
    pip install -r requirements.txt
    ```
 
-4. **Run the application**
+5. **Run the application**
    ```bash
+   # Ensure MySQL is running and DATABASE_URL or DB_* env vars are set
    python src/main.py
    ```
 
@@ -130,14 +130,16 @@ notetaking-app/
 
 ## 🔒 Database Schema
 
-### Notes Table
+The application uses SQLAlchemy models and will create tables in the configured MySQL database on startup.
+
+Example MySQL table for `note` (SQLAlchemy will generate equivalent):
 ```sql
-CREATE TABLE note (
-    id INTEGER PRIMARY KEY,
-    title VARCHAR(200) NOT NULL,
-    content TEXT NOT NULL,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+CREATE TABLE `note` (
+   `id` INT AUTO_INCREMENT PRIMARY KEY,
+   `title` VARCHAR(200) NOT NULL,
+   `content` LONGTEXT NOT NULL,
+   `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
+   `updated_at` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 ```
 
@@ -156,8 +158,8 @@ The application is configured for easy deployment with:
 - `SECRET_KEY`: Flask secret key for sessions
 
 ### Database Configuration
-- Database file: `src/database/app.db`
-- Automatic table creation on first run
+- Database: MySQL (configure via `DATABASE_URL` or `DB_USER/DB_PASSWORD/DB_HOST/DB_PORT/DB_NAME`)
+- Automatic table creation on first run using SQLAlchemy `db.create_all()`
 - SQLAlchemy ORM for database operations
 
 ## 📱 Browser Compatibility
@@ -202,5 +204,5 @@ Potential improvements for future versions:
 
 ---
 
-**Built with ❤️ using Flask, SQLite, and modern web technologies**
+**Built with ❤️ using Flask, MySQL, and modern web technologies**
 
