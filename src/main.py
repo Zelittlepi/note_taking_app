@@ -23,19 +23,39 @@ app.register_blueprint(user_bp, url_prefix='/api')
 app.register_blueprint(note_bp, url_prefix='/api')
 
 # Supabase/Postgres only: configure SQLAlchemy
-db_url = os.getenv('DATABASE_URL')
-if not db_url:
-    raise RuntimeError("DATABASE_URL not set. Please provide your Supabase Postgres connection string in .env.")
-if db_url.startswith('postgres://'):
-    db_url = db_url.replace('postgres://', 'postgresql://', 1)
-if 'sslmode=' not in db_url:
-    db_url += ('&' if '?' in db_url else '?') + 'sslmode=require'
-app.config['SQLALCHEMY_DATABASE_URI'] = db_url
+IS_LOCAL_DEV = os.getenv('LOCAL_DEV', 'false').lower() == 'true'
+
+if IS_LOCAL_DEV:
+    # 本地开发使用SQLite
+    db_path = os.path.join(os.path.dirname(__file__), '..', 'local_notes.db')
+    app.config['SQLALCHEMY_DATABASE_URI'] = f'sqlite:///{db_path}'
+    print("Using local SQLite database for development")
+else:
+    # 生产环境使用Supabase/PostgreSQL
+    db_url = os.getenv('DATABASE_URL')
+    if not db_url:
+        print("WARNING: DATABASE_URL not set, falling back to SQLite")
+        db_path = os.path.join(os.path.dirname(__file__), '..', 'fallback_notes.db')
+        app.config['SQLALCHEMY_DATABASE_URI'] = f'sqlite:///{db_path}'
+    else:
+        if db_url.startswith('postgres://'):
+            db_url = db_url.replace('postgres://', 'postgresql://', 1)
+        if 'sslmode=' not in db_url:
+            db_url += ('&' if '?' in db_url else '?') + 'sslmode=require'
+        app.config['SQLALCHEMY_DATABASE_URI'] = db_url
+        print(f"Using PostgreSQL database")
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db.init_app(app)
-print("Using SQLALCHEMY_DATABASE_URI:", db_url)
-with app.app_context():
-    db.create_all()
+print("Using SQLALCHEMY_DATABASE_URI:", app.config['SQLALCHEMY_DATABASE_URI'])
+
+try:
+    with app.app_context():
+        db.create_all()
+        print("Database tables created successfully")
+except Exception as e:
+    print(f"Database initialization error: {e}")
+    if not IS_LOCAL_DEV:
+        raise
 
 @app.route('/', defaults={'path': ''})
 @app.route('/<path:path>')
