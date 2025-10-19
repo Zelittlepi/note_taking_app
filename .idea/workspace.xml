@@ -40,7 +40,7 @@
       <recent name="C:\Users\79979\Desktop\hk\soft\notetaking-app\src" />
     </key>
   </component>
-  <component name="RunManager" selected="Python.postgressqlTest">
+  <component name="RunManager" selected="Python.main">
     <configuration name="dbTest" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
       <module name="notetaking-app" />
       <option name="INTERPRETER_OPTIONS" value="" />
@@ -169,9 +169,9 @@
     </configuration>
     <recent_temporary>
       <list>
+        <item itemvalue="Python.main" />
         <item itemvalue="Python.postgressqlTest" />
         <item itemvalue="Python.dbTest" />
-        <item itemvalue="Python.main" />
         <item itemvalue="Python.llm (1)" />
         <item itemvalue="Python.llm (1)" />
       </list>
